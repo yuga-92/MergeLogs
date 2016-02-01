@@ -13,24 +13,29 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <errno.h>
+#define MESSAGE_LENGTH 10000
 
 struct list {
     unsigned long id;
-    char data[10000];
+    char data[MESSAGE_LENGTH];
 };
 int openFileAndAddToList(struct list items[], long numberOfLines);
 long numberOfEntries();
-void sorting(struct list items[], long size);
 void writeToFile(struct list items[],long size);
+void sorting(struct list items[], long l,long u);
+long partArr(struct list items[],long l,long u);
 
 int main(int argc, const char * argv[])
 {
     long listSize;
-    listSize = numberOfEntries();
+    listSize = numberOfEntries(); //calculates size of list array
+    /*in future we can implement some functions that will add new elements into list array
+     like in ArrayList in Java, so then we do not need to calculate the size of the array :)*/
     struct list items[listSize];
     openFileAndAddToList(items, listSize);
     printf("Merging...\n");
-    sorting(items, listSize);
+   // sorting(items, listSize);
+    sorting(items,0 , listSize-1);
     writeToFile(items,listSize);
     printf("Done!\n");
     printf("___________________________________________________________\n");
@@ -116,23 +121,7 @@ int openFileAndAddToList(struct list items[], long numberOfLines)
     return 0;
 }
 
-void sorting(struct list items[], long size) {
-    long i, j;
-    struct list temp;
-    
-    for (i = 1; i < size; i++) {
-        for (j = 0; j < size - 1; j++) {
-            if (items[j].id > items[j + 1].id) {
-                temp.id = items[j].id;
-                strcpy(temp.data, items[j].data);
-                items[j].id = items[j + 1].id;
-                strcpy(items[j].data, items[j + 1].data);
-                items[j + 1].id = temp.id;
-                strcpy(items[j + 1].data, temp.data);
-            }
-        }
-    }
-}
+
 void writeToFile(struct list items[],long size)
 {
     FILE    *sourceFile;
@@ -148,4 +137,55 @@ void writeToFile(struct list items[],long size)
     }
     fclose(sourceFile);
 }
+
+void sorting(struct list items[],long l,long u)
+{
+    //i`m not perfectly familiar with implementing of quick sorting algorithm, but i know that it performs quick
+    //so i decided to do some google search about how to implement it correctly
+    long j;
+    if(l<u)
+    {
+        j=partArr(items,l,u);
+        sorting(items,l,j-1);
+        sorting(items,j+1,u);
+    }
+}
+
+long partArr(struct list items[],long l,long u)
+{
+    long i,j;
+    struct list temp, temp1, temp2;
+    temp1.id=items[l].id;
+    strcpy(temp1.data, items[l].data);
+    i=l;
+    j=u+1;
+    
+    do
+    {
+        do
+            i++;
+        while(items[i].id<temp1.id&&i<=u);
+        do
+            j--;
+        while(temp1.id<items[j].id);
+        if(i<j)
+        {
+            temp.id=items[i].id;
+            strcpy(temp.data, items[i].data);
+            
+            items[i].id=items[j].id;
+            strcpy(items[i].data, items[j].data);
+            
+            items[j].id=temp.id;
+            strcpy(items[j].data, temp.data);
+        }
+    }while(i<j);
+    items[l].id=items[j].id;
+    strcpy( temp2.data, items[j].data);
+    strcpy( items[l].data, temp2.data);
+    items[j].id=temp1.id;
+    strcpy( items[j].data, temp1.data);
+    return(j);
+}
+
 
